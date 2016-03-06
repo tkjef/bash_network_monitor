@@ -34,5 +34,23 @@ function extract_params() {
 
 extract_params $@
 
-echo interface $interface
-echo filename $filename
+DATE=`date +"%Y-%m-%d %H:%M"`
+
+data_string=`cat /proc/net/dev | grep -w $interface | cut -f 2 -d ':' | awk '{print $1,$2,$9,$10}'`
+
+if [ -z "$data_string" ]
+then
+	echo Interface $interface does not exist
+fi
+
+rx_bytes=`echo $data_string | awk '{print $1}'`
+rx_pkts=`echo $data_string | awk '{print $2}'`
+tx_bytes=`echo $data_string | awk '{print $3}'`
+tx_pkts=`echo $data_string | awk '{print $4}'`
+
+if [ ! -e $filename ]
+then
+	echo "Date,RX bytes,RX packets,Avg RX Pkt,TX bytes,TX packets,Avg TX Pkt" > $filename
+fi
+
+echo $DATE,$rx_bytes,$rx_pkts,$(($rx_bytes/$rx_pkts)),$tx_bytes,$tx_pkts,$(($tx_bytes/$tx_pkts)) >> $filename
