@@ -1,0 +1,38 @@
+#!/usr/bin/bash
+
+filename=
+interface=
+
+function usage() {
+	echo $0 -i interface -f filename
+	exit 1
+}
+
+function extract_params() {
+	if [ $# -ne 4 ]
+	then
+		usage
+	fi
+
+	while [ $# -gt 1 ]
+	do
+		case $1 in
+			-f)
+				filename=$2
+				;;
+			-i)
+				interface=$2
+				;;
+			*)
+				usage
+				;;
+		esac
+		shift
+		shift
+	done
+}
+
+extract_params $@
+
+echo interface $interface
+echo filename $filename
