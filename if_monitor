@@ -1,0 +1,77 @@
+#!/usr/bin/bash
+
+filename=
+interface=
+interval=
+
+function usage() {
+	echo $0 -i interface -f filename -u interval
+	exit 1;
+}
+
+function extract_params() {
+	if [ $# -ne 6 ]
+	then
+		usage
+	fi
+
+	while [ $# -gt 1 ]
+	do
+		case $1 in
+			-f)
+				filename=$2
+				;;
+			-i)
+				interface=$2
+				;;
+			-u)	
+				interval=$2
+				;;
+			*)
+				usage
+				;;
+		esac
+		shift
+		shift
+	done
+}
+
+function generate_minute_list() {
+
+	INT=$1
+	CRT_MIN=`date +%M`
+	CRT_MIN=$(($CRT_MIN + 2))
+	
+	FIN_MIN=$(($CRT_MIN + 60))
+	
+	LIST=
+	for ((i=$CRT_MIN;$i<$FIN_MIN;i=`expr $i + $INT`))
+	do
+		ADD_MIN=$(($i % 60))
+		LIST=`echo $LIST $ADD_MIN`
+	done
+
+	echo $LIST
+}
+
+extract_params $@
+
+OK_INTS="5 10 20 30 60"
+
+if ! echo $OK_INTS | grep -w $interval > /dev/null
+then
+	echo Accepted time intervals are $OK_INTS
+	exit 2
+fi
+
+MINUTE_LIST=`generate_minute_list $interval`
+
+rm -f if_crontab
+
+for MIN in $MINUTE_LIST
+do
+	echo $MIN \* \* \* \* $PWD/check_iface -i $interface -f $PWD/$filename >> if_crontab
+done
+
+crontab if_crontab
+crontab -l
